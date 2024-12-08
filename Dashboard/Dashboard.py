@@ -1,13 +1,21 @@
-from tensorflow.keras.models import load_model
 import streamlit as st
 import pandas as pd
 import numpy as np
+import joblib
+from tensorflow.keras.models import load_model
+
+# Load model dan scaler (gunakan caching untuk efisiensi)
+@st.cache_resource
+def load_model_and_scaler():
+    model = load_model('./model_heart_disease_classification.h5')
+    scaler = joblib.load('./scaler.pkl')
+    return model, scaler
+
+model, scaler = load_model_and_scaler()
 
 # Judul aplikasi
 st.title('Heart Disease Prediction')
-st.write('''
-This app predicts the **Heart Disease**!
-''')
+st.write('This app predicts the **Heart Disease**!')
 
 # Sidebar untuk input pengguna
 st.sidebar.header('User Input Parameters')
@@ -44,22 +52,26 @@ def user_input_features():
     features = pd.DataFrame(data, index=[0])
     return features
 
+# Ambil input pengguna
 df = user_input_features()
 
-st.subheader('User Input Parameters')
-st.write(df)
+# Scale input features menggunakan scaler dari data pelatihan
+df_scaled = scaler.transform(df)
 
-# Load model
-model = load_model('./model_heart_disease_classification.keras')
+# Debugging
+st.write("User Input Parameters (Raw):", df)
+st.write("Scaled Input Parameters:", df_scaled)
 
-# Predict
-prediction_proba = model.predict(df)
-prediction = (prediction_proba > 0.5).astype(int)  # Threshold 0.5 for binary classification
+# Tombol untuk prediksi
+if st.button('Predict'):
+    # Prediksi
+    prediction_proba = model.predict(df_scaled)
+    prediction = (prediction_proba > 0.5).astype(int)
 
-# Output prediction and probabilities
-st.subheader('Prediction')
-heart_disease = np.array(['No Heart Disease', 'Heart Disease'])
-st.write(heart_disease[prediction[0][0]])  # Output as label
+    # Output prediksi
+    st.subheader('Prediction')
+    heart_disease = np.array(['No Heart Disease', 'Heart Disease'])
+    st.write(heart_disease[prediction[0][0]])
 
-st.subheader('Prediction Probability')
-st.write(prediction_proba[0][0])  # Show the probability
+    st.subheader('Prediction Probability')
+    st.write(prediction_proba[0][0])
