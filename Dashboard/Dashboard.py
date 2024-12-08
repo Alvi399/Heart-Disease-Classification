@@ -7,8 +7,9 @@ from tensorflow.keras.models import load_model
 # Load model dan scaler (gunakan caching untuk efisiensi)
 @st.cache_resource
 def load_model_and_scaler():
-    model = load_model('/Dashboard/model_heart_disease_classification.h5')
-    scaler = joblib.load('/Dashboard/scaler.pkl')
+    model = load_model('Heart Disease Classification/Dashboard/model_heart_disease_classification.h5')
+    scaler = joblib.load('Heart Disease Classification/Dashboard/scaler.pkl')
+    return model, scaler
     return model, scaler
 
 model, scaler = load_model_and_scaler()
